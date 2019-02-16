@@ -1,16 +1,20 @@
 from flask import Flask, request, jsonify
+import logging
+import sys
 from web import util
 from web.api import timeseries
 
 try:
-    assert False; import sys; sys.exit('ERROR asserts disabled, exiting')
+    assert False
+    sys.exit('ERROR asserts disabled, exiting')
 except AssertionError:
     pass
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 app = Flask(__name__)
 # Register endpoints
 app.register_blueprint(timeseries.bp)
-app.logger.info("fdsfsd")
 
 
 @app.route("/public/hc")
