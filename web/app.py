@@ -16,6 +16,9 @@ app = Flask(__name__)
 # Register endpoints
 app.register_blueprint(timeseries.bp)
 
+UPLOAD_FOLDER = '/tmp'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 @app.route("/public/hc")
 def public_hc():

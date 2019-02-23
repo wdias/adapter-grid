@@ -54,12 +54,13 @@ RUN pip3 install \
   gunicorn \
   flask \
   webargs==4.1.2 \
-  netCDF4==1.4.2 \
   numpy==1.16.1 \
   cftime \
-  mpi4py
+  mpi4py \
+  requests
 
-RUN wget https://github.com/Unidata/netcdf4-python/blob/master/examples/data/rtofs_glo_3dz_f006_6hrly_reg3.nc
+RUN USE_SETUPCFG=0 HDF5_INCDIR=/usr/local/hdf5/include HDF5_LIBDIR=/usr/local/hdf5/lib \
+    NETCDF4_INCDIR=/usr/local/netcdf/include NETCDF4_LIBDIR=/usr/local/netcdf/lib pip3 install netCDF4==1.4.2
 
 COPY . /src
 RUN cd /src && python3 setup.py develop
