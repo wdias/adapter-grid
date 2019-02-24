@@ -93,6 +93,23 @@ def timeseries_create(timeseries_id):
         FileStorage(request.stream).save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         merge_netcdf(filename, timeseries_id)
         return 'Stream OK', 200
+
+    # Solution: https://stackoverflow.com/a/54857411/1461060
+    # This'll not work if it checks for `if 'file' not in request.files` above
+    #
+    # def custom_stream_factory(total_content_length, filename, content_type, content_length=None):
+    #     import tempfile
+    #     tmpfile = tempfile.NamedTemporaryFile('wb+', prefix='flaskapp', suffix='.nc')
+    #     app.logger.info("start receiving file ... filename => " + str(tmpfile.name))
+    #     return tmpfile
+    #
+    # import werkzeug, flask
+    # stream, form, files = werkzeug.formparser.parse_form_data(flask.request.environ, stream_factory=custom_stream_factory)
+    # for fil in files.values():
+    #     app.logger.info(" ".join(["saved form name", fil.name, "submitted as", fil.filename, "to temporary file", fil.stream.name]))
+    #     merge_netcdf(fil.stream.name, timeseries_id)
+    # return 'OK', 200
+
     file = request.files['file']
     # if user does not select file, browser also submit an empty part without filename
     if file.filename == '':
