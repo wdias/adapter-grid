@@ -27,10 +27,8 @@ def create_not_exists(filepath, timeseries_id):
             logger.info(f'Creating new database for timeseries: {timeseries_id}')
             ncfile = netCDF4.Dataset(filepath, mode='w', format=NETCDF_FILE_FORMAT)
             timeseries = util.get_timeseries(timeseries_id)
-            logger.info(timeseries)
             assert 'locationId' in timeseries, f'locationId not found for Timeseries: {timeseries_id}'
             location = util.get_regular_grid(timeseries.get('locationId'))
-            logger.info(location)
 
             lat_dim = ncfile.createDimension('latitude', location.get('rows'))  # Y axis
             lon_dim = ncfile.createDimension('longitude', location.get('columns'))  # X axis
@@ -41,9 +39,7 @@ def create_not_exists(filepath, timeseries_id):
             ncfile.parameterId = timeseries.get('parameterId')
             ncfile.locationId = timeseries.get('locationId')
             ncfile.timeseriesType = timeseries.get('timeseriesType')
-            logger.info('111')
             ncfile.timeStepId = timeseries.get('timeStepId')
-            logger.info('222')
 
             lat = ncfile.createVariable('latitude', np.float32, ('latitude',))
             lat.units = location.get('geoDatum')
@@ -78,9 +74,7 @@ def merge_netcdf(filename: str, timeseries_id: str):
 
     merge_nc.set_auto_mask(False)
     times = merge_time[merge_time[:] < TIME_FILTER]
-    print('times: ', times)
     for t in times:
-        print('>> ', t)
         val[t, :, :] = merge_val[t, :, :]
     time[:] = np.unique(np.append(time, times), axis=0)
 
@@ -93,7 +87,12 @@ def timeseries_create(timeseries_id):
     assert timeseries_id, 'timeseries_id should be provided.'
     # check if the post request has the file part
     if 'file' not in request.files:
-        return 'No file part', 400
+        from werkzeug.datastructures import FileStorage
+        from uuid import uuid4
+        filename = f'grid_{timeseries_id}-{uuid4()}.nc'
+        FileStorage(request.stream).save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        merge_netcdf(filename, timeseries_id)
+        return 'Stream OK', 200
     file = request.files['file']
     # if user does not select file, browser also submit an empty part without filename
     if file.filename == '':
