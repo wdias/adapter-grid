@@ -123,8 +123,8 @@ def timeseries_create(timeseries_id):
         return 'OK', 200
 
 
-@bp.route("/timeseries/<string:timeseries_id>", methods=['GET'])
-def timeseries_get():
-    f = netCDF4.Dataset('data/new.nc')
-    logger.info(f)
-    return jsonify(f.data_model)
+@bp.route("/timeseries/<string:timeseries_id>/<request_name>", methods=['GET'])
+def timeseries_get(timeseries_id: str, request_name):
+    from flask import send_from_directory
+    filename = f'data-{timeseries_id}.nc'
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True, attachment_filename=request_name, mimetype='application/x-netcdf4')
