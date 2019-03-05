@@ -72,14 +72,14 @@ RUN sudo pip3 install \
 
 #RUN sudo USE_SETUPCFG=0 HDF5_INCDIR=/usr/local/include HDF5_LIBDIR=/usr/local/lib \
 #    NETCDF4_INCDIR=/usr/local/include NETCDF4_LIBDIR=/usr/local/lib \
-#    mpi_incdir=/usr/include/openmpi pip3 install netCDF4==1.4.2
-#RUN sudo pip3 install netCDF4==1.4.2
-RUN wget -q https://github.com/Unidata/netcdf4-python/archive/v1.4.2rel.tar.gz -O netcdf4-python-1.4.2rel.tar.gz && \
-    tar xf  netcdf4-python-1.4.2rel.tar.gz
-RUN cd netcdf4-python-1.4.2rel && \
+#    mpi_incdir=/usr/include/openmpi pip3 install netCDF4==1.4.3
+#RUN sudo pip3 install netCDF4==1.4.3
+RUN wget -q https://github.com/Unidata/netcdf4-python/archive/v1.4.3rel.tar.gz -O netcdf4-python-1.4.3rel.tar.gz && \
+    tar xf  netcdf4-python-1.4.3rel.tar.gz
+RUN cd netcdf4-python-1.4.3rel && \
     echo "mpi_incdir=/usr/include/openmpi" >> setup.cfg && \
     sudo python setup.py build && sudo python setup.py install && \
-    cd .. && rm -rf netcdf4-python-1.4.2rel.tar.gz
+    cd .. && rm -rf netcdf4-python-1.4.3rel.tar.gz
 
 COPY . /src
 RUN cd /src && sudo python3 setup.py develop
