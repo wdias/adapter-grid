@@ -37,7 +37,7 @@ RUN echo "Installing HDF5 $HDF5_MINOR_REL" && \
     rm -rf /hdf5-${HDF5_MINOR_REL} /hdf5-${HDF5_MINOR_REL}.tar.gz
 
 # NetCDF C Library
-ENV NETCDF_C_VERSION 4.6.1
+ENV NETCDF_C_VERSION 4.6.3
 # ENV NETCDF_C_VERSION `curl https://github.com/Unidata/netcdf-c/releases/latest | grep -o "/v.*\"" | sed 's:^..\(.*\).$:\1:'`
 RUN curl -L https://github.com/Unidata/netcdf-c/archive/v${NETCDF_C_VERSION}.tar.gz > netcdf-c-${NETCDF_C_VERSION}.tar.gz
 RUN echo "Installing NetCDF $NETCDF_C_VERSION" && \
@@ -74,12 +74,13 @@ RUN sudo pip3 install \
 #    NETCDF4_INCDIR=/usr/local/include NETCDF4_LIBDIR=/usr/local/lib \
 #    mpi_incdir=/usr/include/openmpi pip3 install netCDF4==1.4.3
 #RUN sudo pip3 install netCDF4==1.4.3
-RUN wget -q https://github.com/Unidata/netcdf4-python/archive/v1.4.3rel.tar.gz -O netcdf4-python-1.4.3rel.tar.gz && \
-    tar xf  netcdf4-python-1.4.3rel.tar.gz
-RUN cd netcdf4-python-1.4.3rel && \
+ENV NETCDF4_PYTHON 1.4.3.1
+RUN wget -q https://github.com/Unidata/netcdf4-python/archive/v${NETCDF4_PYTHON}.tar.gz -O netcdf4-python-${NETCDF4_PYTHON}.tar.gz && \
+    tar xf  netcdf4-python-${NETCDF4_PYTHON}.tar.gz
+RUN cd netcdf4-python-${NETCDF4_PYTHON} && \
     echo "mpi_incdir=/usr/include/openmpi" >> setup.cfg && \
     sudo python setup.py build && sudo python setup.py install && \
-    cd .. && rm -rf netcdf4-python-1.4.3rel.tar.gz
+    cd .. && rm -rf netcdf4-python-${NETCDF4_PYTHON}.tar.gz
 
 COPY . /src
 RUN cd /src && sudo python3 setup.py develop

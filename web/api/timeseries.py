@@ -25,7 +25,7 @@ def create_not_exists(filepath, timeseries_id):
     try:
         if not os.path.isfile(filepath):
             logger.info(f'Creating new database for timeseries: {timeseries_id}')
-            ncfile = netCDF4.Dataset(filepath, mode='w', format=NETCDF_FILE_FORMAT)
+            ncfile = netCDF4.Dataset(filepath, mode='w', format=NETCDF_FILE_FORMAT, parallel=True)
             timeseries = util.get_timeseries(timeseries_id)
             assert 'locationId' in timeseries, f'locationId not found for Timeseries: {timeseries_id}'
             location = util.get_regular_grid(timeseries.get('locationId'))
@@ -64,8 +64,8 @@ def create_not_exists(filepath, timeseries_id):
 def merge_netcdf(filename: str, timeseries_id: str):
     merge_nc = netCDF4.Dataset(os.path.join(app.config['UPLOAD_FOLDER'], filename), mode='r', format=NETCDF_FILE_FORMAT)
     assert create_not_exists(f'/tmp/data-{timeseries_id}.nc', timeseries_id), 'Unable to create DB store'
-    # ncfile = netCDF4.Dataset(f'/tmp/data-{timeseries_id}.nc', mode='r+', format=NETCDF_FILE_FORMAT, parallel=True)  # TODO
-    ncfile = netCDF4.Dataset(f'/tmp/data-{timeseries_id}.nc', mode='r+', format=NETCDF_FILE_FORMAT)
+    ncfile = netCDF4.Dataset(f'/tmp/data-{timeseries_id}.nc', mode='r+', format=NETCDF_FILE_FORMAT, parallel=True)
+    # ncfile = netCDF4.Dataset(f'/tmp/data-{timeseries_id}.nc', mode='r+', format=NETCDF_FILE_FORMAT)
 
     merge_time = merge_nc.variables['timestamp']
     merge_val = merge_nc.variables['value']
