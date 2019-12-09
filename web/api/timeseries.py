@@ -47,13 +47,19 @@ def create_not_exists(filepath, timeseries_id):
             lon = ncfile.createVariable('longitude', np.float32, ('longitude',))
             lon.units = location.get('geoDatum')
             time = ncfile.createVariable('timestamp', np.float64, ('timestamp',))
-            time.units = "days since 1970-01-01 00:00"
+            time.set_collective(True)
+            # NOTE: There's an issue with storing larger value with collective mode. In order to reduce the size, decrease the date gap
+            # time.units = "days since 1970-01-01 00:00"
+            time.units = "days since 2015-01-01 00:00"
+
             val = ncfile.createVariable('value', np.float32, ('timestamp', 'latitude', 'longitude',))
+            val.set_collective(True)
             val.units = timeseries.get('parameterId')
             # Write lat and lon
             lat[:] = location['yULCorner'] - location['yCellSize'] * np.arange(location['rows'])
             lon[:] = location['xULCorner'] + location['xCellSize'] * np.arange(location['columns'])
 
+            ncfile.sync()
             ncfile.close()
         return True
     except Exception as err:
@@ -70,7 +76,9 @@ def merge_netcdf(filename: str, timeseries_id: str):
     merge_time = merge_nc.variables['timestamp']
     merge_val = merge_nc.variables['value']
     time = ncfile.variables['timestamp']
+    time.set_collective(True)
     val = ncfile.variables['value']
+    val.set_collective(True)
 
     merge_nc.set_auto_mask(False)
     times = merge_time[merge_time[:] < TIME_FILTER]
@@ -79,6 +87,7 @@ def merge_netcdf(filename: str, timeseries_id: str):
     time[:] = np.unique(np.append(time, times), axis=0)
 
     merge_nc.close()
+    ncfile.sync()
     ncfile.close()
 
 
