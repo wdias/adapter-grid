@@ -5,6 +5,7 @@ import netCDF4
 import numpy as np
 from werkzeug.utils import secure_filename
 from flask import current_app as app
+from datetime import datetime, timedelta
 from web import util
 
 bp = Blueprint('timeseries', __name__)
@@ -21,11 +22,12 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def create_not_exists(filepath, timeseries_id):
+def create_not_exists(filepath, timeseries_id, parallel=True):
     try:
         if not os.path.isfile(filepath):
-            logger.info(f'Creating new database for timeseries: {timeseries_id}')
-            ncfile = netCDF4.Dataset(filepath, mode='w', format=NETCDF_FILE_FORMAT, parallel=True)
+            logger.info(f'Creating new database for timeseries: {timeseries_id} ({parallel}) @ {filepath}')
+            ncfile = netCDF4.Dataset(filepath, mode='w', format=NETCDF_FILE_FORMAT, parallel=parallel)
+
             timeseries = util.get_timeseries(timeseries_id)
             assert 'locationId' in timeseries, f'locationId not found for Timeseries: {timeseries_id}'
             location = util.get_regular_grid(timeseries.get('locationId'))
@@ -47,13 +49,11 @@ def create_not_exists(filepath, timeseries_id):
             lon = ncfile.createVariable('longitude', np.float32, ('longitude',))
             lon.units = location.get('geoDatum')
             time = ncfile.createVariable('timestamp', np.float64, ('timestamp',))
-            time.set_collective(True)
             # NOTE: There's an issue with storing larger value with collective mode. In order to reduce the size, decrease the date gap
             # time.units = "days since 1970-01-01 00:00"
             time.units = "days since 2015-01-01 00:00"
 
             val = ncfile.createVariable('value', np.float32, ('timestamp', 'latitude', 'longitude',))
-            val.set_collective(True)
             val.units = timeseries.get('parameterId')
             # Write lat and lon
             lat[:] = location['yULCorner'] - location['yCellSize'] * np.arange(location['rows'])
@@ -132,8 +132,40 @@ def timeseries_create(timeseries_id):
         return 'OK', 200
 
 
+def extract_netcdf(filename: str, timeseries_id: str, start_time: datetime, end_time: datetime):
+    nc_all = netCDF4.Dataset(f'/tmp/data-{timeseries_id}.nc', mode='r', format=NETCDF_FILE_FORMAT, parallel=True)
+    assert create_not_exists(os.path.join(app.config['UPLOAD_FOLDER'], filename), timeseries_id, parallel=False), 'Unable to extract netcdf file'
+    nc_file = netCDF4.Dataset(os.path.join(app.config['UPLOAD_FOLDER'], filename), mode='r+', format=NETCDF_FILE_FORMAT, parallel=False)
+
+    all_time = nc_all.variables['timestamp']
+    all_val = nc_all.variables['value']
+    time = nc_file.variables['timestamp']
+    val = nc_file.variables['value']
+
+    nc_all.set_auto_mask(False)
+    times = all_time[all_time[:] <= netCDF4.date2num(end_time, all_time.units)]
+    times = times[times[:] >= netCDF4.date2num(start_time, all_time.units)]
+    for t in times:
+        val[t, :, :] = all_val[t, :, :]
+    time[:] = np.append(time, times)
+
+    nc_file.sync()
+    nc_file.close()
+    nc_all.close()
+
+
 @bp.route("/timeseries/<string:timeseries_id>/<request_name>", methods=['GET'])
 def timeseries_get(timeseries_id: str, request_name):
     from flask import send_from_directory
-    filename = f'data-{timeseries_id}.nc'
+    from secrets import token_urlsafe
+
+    request_id = token_urlsafe(16)
+    filename = f'download-{timeseries_id}-{request_id}.nc'
+    start = request.args.get('start')
+    logger.info(f"extract grid data of {timeseries_id}, starts from {start} to {filename}")
+    assert request.args.get('start'), 'start date time should be provide'
+    start_time = datetime.strptime(request.args.get('start'), DATE_TIME_FORMAT)
+    assert request.args.get('end'), 'end date time should be provide'
+    end_time = datetime.strptime(request.args.get('end'), DATE_TIME_FORMAT)
+    extract_netcdf(filename, timeseries_id, start_time, end_time)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True, attachment_filename=request_name, mimetype='application/x-netcdf4')
