@@ -16,7 +16,7 @@ app = Flask(__name__)
 # Register endpoints
 app.register_blueprint(timeseries.bp)
 
-UPLOAD_FOLDER = '/tmp'
+UPLOAD_FOLDER = '/grid_data'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 

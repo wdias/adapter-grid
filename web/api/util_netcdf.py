@@ -12,11 +12,11 @@ DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 TIME_FILTER = pow(10, 10)
 
 
-def create_parallel_not_exists(filepath, timeseries_id):
+def create_parallel_not_exists(file_path, timeseries_id):
     try:
-        if not os.path.isfile(filepath):
-            logger.info(f'Creating new database for timeseries: {timeseries_id} @ {filepath}')
-            nc_file = netCDF4.Dataset(filepath, mode='w', format=NETCDF_FILE_FORMAT, parallel=True)
+        if not os.path.isfile(file_path):
+            logger.info(f'Creating new database for timeseries: {timeseries_id} @ {file_path}')
+            nc_file = netCDF4.Dataset(file_path, mode='w', format=NETCDF_FILE_FORMAT, parallel=True)
 
             timeseries = util.get_timeseries(timeseries_id)
             assert 'locationId' in timeseries, f'locationId not found for Timeseries: {timeseries_id}'
@@ -58,8 +58,7 @@ def create_parallel_not_exists(filepath, timeseries_id):
         return False
 
 
-def get_non_parallel_netcdf_file(timeseries_id, request_id):
-    filename = f'/tmp/download-{timeseries_id}-{request_id}.nc'
+def get_non_parallel_netcdf_file(filename, timeseries_id):
     if os.path.isfile(filename):
         nc_file = netCDF4.Dataset(filename, mode='r+', format=NETCDF_FILE_FORMAT)
     else:

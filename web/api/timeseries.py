@@ -25,9 +25,10 @@ def allowed_file(filename):
 
 def merge_netcdf(filename: str, timeseries_id: str):
     merge_nc = netCDF4.Dataset(os.path.join(app.config['UPLOAD_FOLDER'], filename), mode='r', format=NETCDF_FILE_FORMAT)
-    assert util_netcdf.create_parallel_not_exists(f'/tmp/data-{timeseries_id}.nc', timeseries_id), 'Unable to create DB store'
-    nc_file = netCDF4.Dataset(f'/tmp/data-{timeseries_id}.nc', mode='r+', format=NETCDF_FILE_FORMAT, parallel=True)
-    # nc_file = netCDF4.Dataset(f'/tmp/data-{timeseries_id}.nc', mode='r+', format=NETCDF_FILE_FORMAT)
+    filename = os.path.join(app.config['UPLOAD_FOLDER'], f'data-{timeseries_id}.nc')
+    assert util_netcdf.create_parallel_not_exists(filename, timeseries_id), 'Unable to create DB store'
+    nc_file = netCDF4.Dataset(filename, mode='r+', format=NETCDF_FILE_FORMAT, parallel=True)
+    # nc_file = netCDF4.Dataset(filename, mode='r+', format=NETCDF_FILE_FORMAT)
 
     merge_time = merge_nc.variables['timestamp']
     merge_val = merge_nc.variables['value']
@@ -92,10 +93,11 @@ def timeseries_create(timeseries_id):
 
 
 def extract_netcdf(timeseries_id: str, request_id: str, start_time: datetime, end_time: datetime):
-    data_filename = f'/tmp/data-{timeseries_id}.nc'
+    data_filename = os.path.join(app.config['UPLOAD_FOLDER'], f'data-{timeseries_id}.nc')
     assert os.path.isfile(data_filename), f'Timeseries {timeseries_id} data not found'
     nc_all = netCDF4.Dataset(data_filename, mode='r', format=NETCDF_FILE_FORMAT, parallel=True)
-    nc_file = util_netcdf.get_non_parallel_netcdf_file(timeseries_id, request_id)
+    download_filename = os.path.join(app.config['UPLOAD_FOLDER'], f'download-{timeseries_id}-{request_id}.nc')
+    nc_file = util_netcdf.get_non_parallel_netcdf_file(download_filename ,timeseries_id)
 
     all_time = nc_all.variables['timestamp']
     all_val = nc_all.variables['value']
