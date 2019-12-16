@@ -1,5 +1,6 @@
-import requests, json
+import requests, json, os
 
+OPTIMIZE_STORAGE: bool = os.getenv('OPTIMIZE_STORAGE', True)
 ADAPTER_METADATA = 'http://adapter-metadata.default.svc.cluster.local'
 
 

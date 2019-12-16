@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 from flask import current_app as app
 from datetime import datetime
 from web.api import util_netcdf
+from web import util
 
 bp = Blueprint('timeseries', __name__)
 logger = logging.getLogger(__name__)
@@ -56,6 +57,9 @@ def timeseries_create(timeseries_id):
         filename = f'grid_{timeseries_id}-{uuid4()}.nc'
         FileStorage(request.stream).save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         merge_netcdf(filename, timeseries_id)
+        # Remove netCDF file after merge
+        if util.OPTIMIZE_STORAGE:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         return 'Stream OK', 200
 
     # Solution: https://stackoverflow.com/a/54857411/1461060
@@ -124,4 +128,5 @@ def timeseries_get(timeseries_id: str, request_name):
     assert request.args.get('end'), 'end date time should be provide'
     end_time = datetime.strptime(request.args.get('end'), DATE_TIME_FORMAT)
     extract_netcdf(timeseries_id, request_id, start_time, end_time)
+    # TODO: Remove netCDF file after download
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True, attachment_filename=request_name, mimetype='application/x-netcdf4')
