@@ -1,4 +1,9 @@
-import requests, json, os
+import json
+import logging
+import os
+import requests
+
+logger = logging.getLogger(__name__)
 
 OPTIMIZE_STORAGE: bool = os.getenv('OPTIMIZE_STORAGE', True)
 ADAPTER_METADATA = 'http://adapter-metadata.default.svc.cluster.local'
@@ -55,3 +60,33 @@ def get_regular_grid(location_id: str) -> json:
     else:
         assert False, 'Unable to find gridCorners or gridCorners'
     return data
+
+
+def remove_download_files(flask_app):
+    import glob
+    from time import time
+    now = time()
+    # logger.info(f"running {path} - {glob.glob(path + '/download-*.nc')}")
+    count = 0
+    for i, f in enumerate(glob.glob(f"{flask_app.config['UPLOAD_FOLDER']}/download-*.nc")):
+        if os.path.getmtime(f) < now - 30:  # Delete files older than 10 seconds
+            if os.path.isfile(f):
+                os.remove(f)
+                count += 1
+    if count:
+        logger.info(f'Removed #{count} of download files')
+
+
+def every(delay, task, flask_app):
+    import time, traceback
+    next_time = time.time() + delay
+    while True:
+        time.sleep(max(0, next_time - time.time()))
+        try:
+            task(flask_app)
+        except Exception:
+            traceback.print_exc()
+        # in production code you might want to have this instead of course:
+        # logger.exception("Problem while executing repetitive task.")
+        # skip tasks if we are behind schedule:
+        next_time += (time.time() - next_time) // delay * delay + delay

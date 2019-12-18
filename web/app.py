@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import logging
 import sys
+import threading
 from web import util
 from web.api import timeseries
 
@@ -18,6 +19,7 @@ app.register_blueprint(timeseries.bp)
 
 UPLOAD_FOLDER = '/grid_data'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+threading.Thread(target=lambda: util.every(5, util.remove_download_files, app)).start()
 
 
 @app.route("/public/hc")
