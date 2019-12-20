@@ -10,6 +10,15 @@ NETCDF_FILE_FORMAT = 'NETCDF4_CLASSIC'  # 'NETCDF4', 'NETCDF4_CLASSIC'
 ALLOWED_EXTENSIONS = set(['nc'])
 DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 TIME_FILTER = pow(10, 10)
+PARALLEL_NETCDF = {}
+
+
+def get_parallel_netcdf_file(database_path: str, timeseries_id: str):
+    if timeseries_id not in PARALLEL_NETCDF:
+        assert create_parallel_not_exists(database_path, timeseries_id), 'Unable to create DB store'
+        PARALLEL_NETCDF[timeseries_id] = netCDF4.Dataset(database_path, mode='r+', format=NETCDF_FILE_FORMAT, parallel=True)
+        # nc_file = netCDF4.Dataset(database_path, mode='r+', format=NETCDF_FILE_FORMAT)
+    return PARALLEL_NETCDF[timeseries_id]
 
 
 def create_parallel_not_exists(file_path, timeseries_id):

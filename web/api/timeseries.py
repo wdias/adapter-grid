@@ -25,10 +25,8 @@ def allowed_file(filename):
 
 def merge_netcdf(filename: str, timeseries_id: str):
     merge_nc = netCDF4.Dataset(os.path.join(app.config['UPLOAD_FOLDER'], filename), mode='r', format=NETCDF_FILE_FORMAT)
-    filename = os.path.join(app.config['UPLOAD_FOLDER'], f'data-{timeseries_id}.nc')
-    assert util_netcdf.create_parallel_not_exists(filename, timeseries_id), 'Unable to create DB store'
-    nc_file = netCDF4.Dataset(filename, mode='r+', format=NETCDF_FILE_FORMAT, parallel=True)
-    # nc_file = netCDF4.Dataset(filename, mode='r+', format=NETCDF_FILE_FORMAT)
+    database_path = os.path.join(app.config['UPLOAD_FOLDER'], f'data-{timeseries_id}.nc')
+    nc_file = util_netcdf.get_parallel_netcdf_file(database_path, timeseries_id)
 
     merge_time = merge_nc.variables['timestamp']
     merge_val = merge_nc.variables['value']
