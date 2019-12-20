@@ -70,7 +70,7 @@ def remove_download_files(flask_app):
     # logger.info(f"running {path} - {glob.glob(path + '/download-*.nc')}")
     count = 0
     for i, f in enumerate(glob.glob(f"{flask_app.config['UPLOAD_FOLDER']}/download-*.nc")):
-        if os.path.getmtime(f) < now - 30:  # Delete files older than 10 seconds
+        if os.path.getmtime(f) < now - 60:  # Delete files older than 60 seconds
             if os.path.isfile(f):
                 os.remove(f)
                 count += 1
