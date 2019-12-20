@@ -5,7 +5,8 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-OPTIMIZE_STORAGE: bool = os.getenv('OPTIMIZE_STORAGE', True)
+OPTIMIZE_STORAGE: bool = os.getenv('OPTIMIZE_STORAGE', '1') == '1'
+logger.info(f"OPTIMIZE_STORAGE: {OPTIMIZE_STORAGE}")
 ADAPTER_METADATA = 'http://adapter-metadata.default.svc.cluster.local'
 
 
