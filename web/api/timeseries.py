@@ -43,7 +43,7 @@ def merge_netcdf(filename: str, timeseries_id: str):
 
     merge_nc.close()
     nc_file.sync()
-    nc_file.close()
+    # nc_file.close()
 
 
 @bp.route("/timeseries/<string:timeseries_id>", methods=['POST'])
@@ -95,7 +95,7 @@ def extract_netcdf(timeseries_id: str, request_id: str, start_time: datetime, en
     assert os.path.isfile(data_filename), f'Timeseries {timeseries_id} data not found'
     nc_all = netCDF4.Dataset(data_filename, mode='r', format=NETCDF_FILE_FORMAT, parallel=True)
     download_filename = os.path.join(app.config['UPLOAD_FOLDER'], f'download-{timeseries_id}-{request_id}.nc')
-    nc_file = util_netcdf.get_non_parallel_netcdf_file(download_filename ,timeseries_id)
+    nc_file = util_netcdf.get_non_parallel_netcdf_file(download_filename, timeseries_id)
 
     all_time = nc_all.variables['timestamp']
     all_val = nc_all.variables['value']
