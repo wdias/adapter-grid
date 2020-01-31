@@ -1,4 +1,4 @@
-FROM python:3.7.3-slim-buster
+FROM python:3.7.3-slim
 
 RUN apt-get update && \
     apt-get install -y wget curl libcurl3 sudo openssh-client vim && \
